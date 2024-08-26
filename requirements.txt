@@ -1,0 +1,11 @@
+google-generativeai
+python-telegram-bot
+
+
+# dot_env
+python-dotenv
+
+# Formating code:
+flake8
+black
+isort
