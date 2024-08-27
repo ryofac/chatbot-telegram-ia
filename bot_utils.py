@@ -106,7 +106,7 @@ async def chat(update, context):
 
 async def exit(update, context):
     await update.message.reply_text(
-        "<b>Obrigado por utilizar o otobot! \n Para mais conversas digite /start!  <b>",
+        "<b>Obrigado por utilizar o otobot! \n Para mais conversas digite /start!</b>",
         parse_mode="HTML",
     )
 
