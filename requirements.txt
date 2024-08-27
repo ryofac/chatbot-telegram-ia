@@ -1,3 +1,4 @@
+Pillow # gerenciar imagens
 google-generativeai
 python-telegram-bot
 

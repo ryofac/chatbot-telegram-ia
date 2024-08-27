@@ -1,16 +1,18 @@
 import asyncio
+import io
 import logging
 import time
 
 import google.generativeai as generai
 from google.api_core.exceptions import ResourceExhausted
+from PIL import Image
 from telegram.ext import ConversationHandler
 
 import config
 from config import MODEL_PROMPT
 
 # Enum de estados
-START_CONVERSATION, CHAT, END_CONVERSATION = range(3)
+CHAT, REQUEST_IMAGE, PROCESSING_IMAGE = range(3)
 
 
 logger = logging.getLogger(__name__)
@@ -45,16 +47,19 @@ async def send_message_with_retry(chat_session, prompt, retries=3):
     raise RuntimeError("Falha ao enviar mensagem após várias tentativas.")
 
 
-async def chat(update, context):
-    user_id = update.message.from_user.id
+def get_or_create_chat_session(user_id):
     chat_session = chat_sessions.get(user_id)
-
     if chat_session is None:
         chat_session = model.start_chat()
         chat_sessions[user_id] = chat_session
+    return chat_session
 
+
+async def chat(update, context):
+    user_id = update.message.from_user.id
+    chat_session = get_or_create_chat_session(user_id)
     try:
-        user_message = update.message.text.strip() if update.message else None
+        user_message = update.message.text.strip() if update.message.text else None
 
         if not user_message:
             await update.message.reply_text(
@@ -102,6 +107,49 @@ async def chat(update, context):
         logger.info(chat_sessions)
 
     return CHAT
+
+
+async def request_image(update, context):
+    await update.message.reply_text(
+        "Processamento de imagem! \n Mande uma imagem com descrição (ou não) para eu processar"
+    )
+    return PROCESSING_IMAGE
+
+
+async def process_image(update, context):
+    try:
+        user_images = update.message.photo
+        user_message = update.message.text
+        logger.info(f"Imagens do usuário: {str(user_images)}")
+
+        if not user_images:
+            return REQUEST_IMAGE
+
+        logger.info("Processando imagem!")
+        chat_session = get_or_create_chat_session(update.message.from_user.id)
+        file = await update.message.photo[0].get_file()
+        file_bytes = await file.download_as_bytearray()
+        image_file = Image.open(io.BytesIO(file_bytes))
+        await update.message.reply_text(
+            "Processando imagem...",
+            parse_mode="HTML",
+        )
+        # Pegar o input do user ou mandar só a imagem
+        response = await chat_session.send_message_async(
+            [image_file, MODEL_PROMPT + "Gere uma descrição para essa imagem:" + (user_message if user_message else "")]
+        )
+        await update.message.reply_text(
+            response.text,
+            parse_mode="MARKDOWN",
+        )
+        return CHAT
+    except Exception as e:
+        logger.error(f"Erro crítico ao processar imagem: {str(e)}")
+        await update.message.reply_text(
+            "Erro ao processar imagem, voltando ao chat!",
+            parse_mode="MARKDOWN",
+        )
+        return CHAT
 
 
 async def exit(update, context):
