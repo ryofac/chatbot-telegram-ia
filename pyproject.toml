@@ -1,0 +1,45 @@
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = [
+  'E203', # Espaços antes dos dois pontos em fatiamento de lista
+  'W503', # Linha de quebra antes de operador binário
+]
+exclude = ['.venv', 'build', 'dist']
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_third_party = ["django", "rest_framework", "flask"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_gitignore = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["tests/*", "migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
+
+[tool.pylint]
+max-line-length = 120
+disable = [
+  "C0114", # Missing module docstring
+  "C0115", # Missing class docstring
+  "C0116", # Missing function docstring
+]
