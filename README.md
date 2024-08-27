@@ -17,7 +17,7 @@ Para saber mais sobre a API base do Telegram utilizada, acesse [este link](#).
 
 
 ## TODO:
-- [ ] Conseguir mandar imagens via bot para a API do Gemini
+- [x] Conseguir mandar imagens via bot para a API do Gemini
 - [ ] Deploy do backend do bot
 - [ ] Bot restrito a membros de um canal específico do Telegram
 - [ ] Mais interações

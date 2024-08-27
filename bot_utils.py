@@ -130,19 +130,23 @@ async def process_image(update, context):
         file = await update.message.photo[0].get_file()
         file_bytes = await file.download_as_bytearray()
         image_file = Image.open(io.BytesIO(file_bytes))
+
         await update.message.reply_text(
             "Processando imagem...",
             parse_mode="HTML",
         )
+
         # Pegar o input do user ou mandar só a imagem
         response = await chat_session.send_message_async(
             [image_file, MODEL_PROMPT + "Gere uma descrição para essa imagem:" + (user_message if user_message else "")]
         )
+
         await update.message.reply_text(
             response.text,
             parse_mode="MARKDOWN",
         )
         return CHAT
+
     except Exception as e:
         logger.error(f"Erro crítico ao processar imagem: {str(e)}")
         await update.message.reply_text(
