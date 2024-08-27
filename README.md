@@ -1,6 +1,6 @@
 # OtBot - A IA mais gatona do IFPI
 
-**OtBot** é um chatbot avançado, projetado para diversas aplicações, que opera utilizando a API oficial do Telegram e os modelos de geração de linguagem **Google Gemini**. Desenvolvido para oferecer interações dinâmicas e inteligentes, o OtBot é a solução ideal para diversas necessidades dentro do Instituto Federal do Piauí (IFPI).
+**OtBot** é um chatbot simples, projetado para conversas rápidas, que opera utilizando a API oficial do Telegram e os modelos de geração de linguagem **Google Gemini**.
 
 Para saber mais sobre a API base do Telegram utilizada, acesse [este link](#).
 
@@ -15,3 +15,9 @@ Para saber mais sobre a API base do Telegram utilizada, acesse [este link](#).
 3. **Inicie o Bot**:
    - Execute o arquivo `main.py` para iniciar a comunicação do bot com a API do Telegram.
 
+
+## TODO:
+- [ ] Conseguir mandar imagens via bot para a API do Gemini
+- [ ] Deploy do backend do bot
+- [ ] Bot restrito a membros de um canal específico do Telegram
+- [ ] Mais interações
