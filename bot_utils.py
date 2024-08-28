@@ -6,10 +6,11 @@ import time
 import google.generativeai as generai
 from google.api_core.exceptions import ResourceExhausted
 from PIL import Image
+from telegram.constants import ParseMode
 from telegram.ext import ConversationHandler
 
 import config
-from config import MODEL_PROMPT
+from config import MODEL_NAME, MODEL_PROMPT
 
 # Enum de estados
 CHAT, REQUEST_IMAGE, PROCESSING_IMAGE = range(3)
@@ -22,17 +23,25 @@ model = generai.GenerativeModel(config.MODEL_NAME)
 chat_sessions = {}
 
 
+def get_user_message_count(history):
+    count = 0
+    for message in history:
+        if message.role == "user":
+            count += 1
+    return count
+
+
 async def start(update, context):
     await update.message.reply_text(
-        "Bem vindo ao OctoBot!\n <b>Esse é o chatbot mais gatão do planeta!</b>\n Para sair digite /end",
-        parse_mode="HTML",
+        "Bem vindo ao OctoBot \n <b>Esse é o chatbot mais gatão do planeta </b>\n Para sair digite /end",
+        parse_mode=ParseMode.HTML,
     )
     return CHAT
 
 
 async def error_handler(update, context):
     logger.error(msg="Ocorreu um erro crítico:", exc_info=context.error)
-    await update.message.reply_text("Ocorreu um erro. Tente novamente mais tarde!")
+    await update.message.reply_text("Ocorreu um erro. Tente novamente mais tarde")
 
 
 async def send_message_with_retry(chat_session, prompt, retries=3):
@@ -44,13 +53,16 @@ async def send_message_with_retry(chat_session, prompt, retries=3):
             logger.warning(f"Tentativa {attempt + 1} de enviar mensagem excedeu o tempo limite. Reintentando...")
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem na tentativa {attempt + 1}: {e}", exc_info=True)
+        except ResourceExhausted as e:
+            raise ResourceExhausted(e)
+
     raise RuntimeError("Falha ao enviar mensagem após várias tentativas.")
 
 
 def get_or_create_chat_session(user_id):
     chat_session = chat_sessions.get(user_id)
     if chat_session is None:
-        chat_session = model.start_chat()
+        chat_session = model.start_chat(history=[{"role": "model", "parts": MODEL_PROMPT}])
         chat_sessions[user_id] = chat_session
     return chat_session
 
@@ -59,21 +71,31 @@ async def chat(update, context):
     user_id = update.message.from_user.id
     chat_session = get_or_create_chat_session(user_id)
     try:
+        if len(update.message.photo) > 0:
+            await update.message.reply_text(
+                (
+                    "<b>Notei que você enviou uma imagem</b>\n"
+                    "Digite /image para entrar no modo de processamento de imagens"
+                ),
+                parse_mode=ParseMode.HTML,
+            )
+            return CHAT
+
         user_message = update.message.text.strip() if update.message.text else None
 
         if not user_message:
             await update.message.reply_text(
                 "Desculpe, não entendi sua mensagem. Por favor, tente novamente.",
-                parse_mode="HTML",
+                parse_mode=ParseMode.HTML,
             )
             return CHAT
 
         await update.message.reply_text(
             "<b>Gerando sua resposta...</b>",
-            parse_mode="HTML",
+            parse_mode=ParseMode.HTML,
         )
         start_time = time.time()
-        prompt = MODEL_PROMPT + f"\n Perfira respostas curtas, Aqui está a mensagem do usuário: {user_message}"
+        prompt = f"\n Perfira respostas curtas, Aqui está a mensagem do usuário: {user_message}"
         response = await send_message_with_retry(chat_session, prompt)
         elapsed_time = time.time() - start_time
 
@@ -83,7 +105,7 @@ async def chat(update, context):
 
         await update.message.reply_text(
             response.text,
-            parse_mode="MARKDOWN",
+            parse_mode=ParseMode.MARKDOWN,
         )
 
         await update.message.reply_text(
@@ -92,7 +114,7 @@ async def chat(update, context):
 
     except ResourceExhausted as e:
         await update.message.reply_text(
-            f"Limite de quota alcançado! : {e}",
+            f"Limite de quota alcançado : {e}",
         )
 
     except Exception as e:
@@ -102,7 +124,7 @@ async def chat(update, context):
         )
         await update.message.reply_text(
             "Ocorreu um erro ao processar sua mensagem. Por favor, tente novamente mais tarde.",
-            parse_mode="HTML",
+            parse_mode=ParseMode.HTML,
         )
         logger.info(chat_sessions)
 
@@ -111,7 +133,7 @@ async def chat(update, context):
 
 async def request_image(update, context):
     await update.message.reply_text(
-        "Processamento de imagem! \n Mande uma imagem com descrição (ou não) para eu processar"
+        "Processamento de imagem \n Mande uma imagem com descrição (ou não) para eu processar"
     )
     return PROCESSING_IMAGE
 
@@ -119,13 +141,13 @@ async def request_image(update, context):
 async def process_image(update, context):
     try:
         user_images = update.message.photo
-        user_message = update.message.text
+        image_description = update.message.caption
         logger.info(f"Imagens do usuário: {str(user_images)}")
 
         if not user_images:
             return REQUEST_IMAGE
 
-        logger.info("Processando imagem!")
+        logger.info("Processando imagem")
         chat_session = get_or_create_chat_session(update.message.from_user.id)
         file = await update.message.photo[0].get_file()
         file_bytes = await file.download_as_bytearray()
@@ -133,33 +155,77 @@ async def process_image(update, context):
 
         await update.message.reply_text(
             "Processando imagem...",
-            parse_mode="HTML",
+            parse_mode=ParseMode.HTML,
         )
 
         # Pegar o input do user ou mandar só a imagem
         response = await chat_session.send_message_async(
-            [image_file, MODEL_PROMPT + "Gere uma descrição para essa imagem:" + (user_message if user_message else "")]
+            [
+                image_file,
+                MODEL_PROMPT + (image_description if image_description else "Gere uma descrição para essa imagem:"),
+            ]
+        )
+
+        await update.message.reply_text(
+            (
+                "Enviando pergunta: " + f"<b>{image_description}</b>"
+                if image_description
+                else "Nenhuma descrição detectada"
+            ),
+            parse_mode=ParseMode.HTML,
         )
 
         await update.message.reply_text(
             response.text,
-            parse_mode="MARKDOWN",
+            parse_mode=ParseMode.MARKDOWN,
         )
+
         return CHAT
 
     except Exception as e:
         logger.error(f"Erro crítico ao processar imagem: {str(e)}")
         await update.message.reply_text(
-            "Erro ao processar imagem, voltando ao chat!",
-            parse_mode="MARKDOWN",
+            "Erro ao processar imagem, voltando ao chat",
+            parse_mode=ParseMode.MARKDOWN,
         )
         return CHAT
 
 
 async def exit(update, context):
     await update.message.reply_text(
-        "<b>Obrigado por utilizar o otobot! \n Para mais conversas digite /start!</b>",
-        parse_mode="HTML",
+        "<b>Obrigado por utilizar o otobot \n Para mais conversas digite /start</b>",
+        parse_mode=ParseMode.HTML,
     )
 
+    chat_sessions.pop(update.from_user.id, None)
+
     return ConversationHandler.END
+
+
+async def get_info(update, context):
+    chat_session = chat_sessions.get(update.message.from_user.id, None)
+
+    if not chat_session:
+        await update.message.reply_text("Não consegui obter informações de conversa, converse comigo primeiro")
+        return CHAT
+
+    data = (
+        "<b> Informações gerais sobre o Otobot </b>\n\n"
+        f"* Nome do modelo: {MODEL_NAME}\n\n"
+        f"* Prompt de geração: {MODEL_PROMPT}\n\n"
+        f"* Quantidade de mensagens enviadas: {get_user_message_count(chat_session.history)}"
+    )
+
+    await update.message.reply_text(data, parse_mode=ParseMode.HTML)
+    await update.message.reply_text("Aguarde, obtendo informações sobre nossa conversa...")
+
+    try:
+        chat_overview_response = await send_message_with_retry(
+            chat_session, "Gere um histórico da nossa conversa, em tópicos"
+        )
+        await update.message.reply_text(chat_overview_response.text, parse_mode=ParseMode.MARKDOWN)
+
+    except Exception:
+        await update.message.reply_text(
+            "Não consegui obter informações sobre o histórico da nossa conversa mas sei que foi bem legal"
+        )
