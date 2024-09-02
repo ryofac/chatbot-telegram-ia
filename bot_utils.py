@@ -197,7 +197,7 @@ async def exit(update, context):
         parse_mode=ParseMode.HTML,
     )
 
-    chat_sessions.pop(update.from_user.id, None)
+    chat_sessions.pop(update.message.from_user.id, None)
 
     return ConversationHandler.END
 
