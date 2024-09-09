@@ -234,7 +234,7 @@ async def get_info(update, context):
         chat_overview_response = await send_message_with_retry(
             chat_session, "Gere um historico da nossa conversa, em topicos"
         )
-        await update.message.reply_text(chat_overview_response.text, parse_mode=ParseMode.MARKDOWN)
+        await update.message.reply_text(chat_overview_response.text, parse_mode=ParseMode.HTML)
 
     except Exception as e:
         print(e)
