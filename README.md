@@ -1,6 +1,6 @@
-# OtBot - A IA mais gatona do IFPI
+# Gobot - O chatbot sobre godot
 
-**OtBot** é um chatbot simples, projetado para conversas rápidas, que opera utilizando a API oficial do Telegram e os modelos de geração de linguagem **Google Gemini**.
+**Gobot** é um chatbot simples, projetado para ensinar de forma didática e resolver dúvidas sobre a Godot Game Engine, que opera utilizando a API oficial do Telegram e os modelos de geração de linguagem **Google Gemini**.
 
 Para saber mais sobre a API base do Telegram utilizada, acesse [este link](#).
 
@@ -18,6 +18,6 @@ Para saber mais sobre a API base do Telegram utilizada, acesse [este link](#).
 
 ## TODO:
 - [x] Conseguir mandar imagens via bot para a API do Gemini
-- [ ] Deploy do backend do bot
+- [X] Deploy do backend do bot
 - [ ] Bot restrito a membros de um canal específico do Telegram
 - [ ] Mais interações
