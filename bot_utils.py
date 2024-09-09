@@ -227,16 +227,17 @@ async def get_info(update, context):
         f"* Quantidade de mensagens enviadas: {get_user_message_count(chat_session.history)}"
     )
 
-    await update.message.reply_text(data, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(data, parse_mode=ParseMode.MARKDOWN_V2)
     await update.message.reply_text("Aguarde, obtendo informações sobre nossa conversa...")
 
     try:
         chat_overview_response = await send_message_with_retry(
-            chat_session, "Gere um histórico da nossa conversa, em tópicos"
+            chat_session, "Gere um historico da nossa conversa, em topicos"
         )
         await update.message.reply_text(chat_overview_response.text, parse_mode=ParseMode.MARKDOWN)
 
-    except Exception:
+    except Exception as e:
+        print(e)
         await update.message.reply_text(
             "Não consegui obter informações sobre o histórico da nossa conversa mas sei que foi bem legal"
         )
