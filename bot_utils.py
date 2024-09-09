@@ -33,7 +33,7 @@ def get_user_message_count(history):
 
 async def start(update, context):
     await update.message.reply_text(
-        "Bem vindo ao OctoBot \n <b>Esse é o chatbot mais gatão do planeta </b>\n Para sair digite /end",
+        "Bem vindo ao Gobot! \n <b>Sua I.A especializada em Godot Game Engine!</b>\n Para sair digite /end",
         parse_mode=ParseMode.HTML,
     )
     return CHAT
@@ -193,7 +193,7 @@ async def process_image(update, context):
 
 async def exit(update, context):
     await update.message.reply_text(
-        "<b>Obrigado por utilizar o otobot \n Para mais conversas digite /start</b>",
+        "<b>Obrigado por utilizar o Gobot \n Para mais conversas digite /start</b>",
         parse_mode=ParseMode.HTML,
     )
 
@@ -210,7 +210,7 @@ async def get_info(update, context):
         return CHAT
 
     data = (
-        "<b> Informações gerais sobre o Otobot </b>\n\n"
+        "<b> Informações gerais sobre o Gobot </b>\n\n"
         f"* Nome do modelo: {MODEL_NAME}\n\n"
         f"* Prompt de geração: {MODEL_PROMPT}\n\n"
         f"* Quantidade de mensagens enviadas: {get_user_message_count(chat_session.history)}"
