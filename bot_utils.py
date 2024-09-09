@@ -227,7 +227,7 @@ async def get_info(update, context):
         f"* Quantidade de mensagens enviadas: {get_user_message_count(chat_session.history)}"
     )
 
-    await update.message.reply_text(data, parse_mode=ParseMode.MARKDOWN_V2)
+    await update.message.reply_text(data, parse_mode=ParseMode.HTML)
     await update.message.reply_text("Aguarde, obtendo informações sobre nossa conversa...")
 
     try:
