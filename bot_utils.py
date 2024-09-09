@@ -59,13 +59,11 @@ async def send_message_with_retry(chat_session, prompt, retries=3):
 
     raise RuntimeError("Falha ao enviar mensagem após várias tentativas.")
 
-    # conteudo = json.load()
-
 
 def load_data():
     with open(config.FILE_PATH) as file:
         conteudo = json.load(file)
-        return "Você sabe dados sobre esses jogos, em JSON: " + json.dumps(conteudo)
+        return "Você sabe SOMENTE dados sobre esses jogos, em JSON: " + json.dumps(conteudo)
 
 
 def get_or_create_chat_session(user_id):
