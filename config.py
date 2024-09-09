@@ -1,5 +1,5 @@
 MODEL_NAME = "gemini-1.0-pro-latest"
-
+FILE_PATH = "./jogos.json"
 MODEL_CONFIG = {
     "max_tokens": 150,
     "temperature": 0.7,

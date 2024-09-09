@@ -8,7 +8,7 @@ from google.api_core.exceptions import ResourceExhausted
 from PIL import Image
 from telegram.constants import ParseMode
 from telegram.ext import ConversationHandler
-
+import json
 import config
 from config import MODEL_NAME, MODEL_PROMPT
 
@@ -58,11 +58,16 @@ async def send_message_with_retry(chat_session, prompt, retries=3):
 
     raise RuntimeError("Falha ao enviar mensagem após várias tentativas.")
 
+    #conteudo = json.load()
+
+def load_data():
+    with open(config.FILE_PATH) as file:
+        return json.load(file)
 
 def get_or_create_chat_session(user_id):
     chat_session = chat_sessions.get(user_id)
     if chat_session is None:
-        chat_session = model.start_chat(history=[{"role": "model", "parts": MODEL_PROMPT}])
+        chat_session = model.start_chat(history=[{"role": "model", "parts": MODEL_PROMPT}, {"role": "model", "parts": load_data() }])
         chat_sessions[user_id] = chat_session
     return chat_session
 
